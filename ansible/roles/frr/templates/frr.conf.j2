@@ -1,0 +1,27 @@
+#jinja2: lstrip_blocks: True
+! {{ ansible_managed }} — ne pas modifier à la main
+frr version 9.1
+frr defaults traditional
+hostname {{ inventory_hostname }}
+service integrated-vtysh-config
+!
+{% for itf in interfaces %}
+interface {{ itf.name }}
+  {% if itf.description is defined %}
+ description {{ itf.description }}
+  {% endif %}
+  {% for addr in itf.addresses | default([]) %}
+ ip address {{ addr }}
+  {% endfor %}
+exit
+!
+{% endfor %}
+{% if trunk is defined %}
+  {% for v in trunk.vlans %}
+interface {{ trunk.parent }}.{{ v.id }}
+ description Passerelle VLAN {{ v.id }} {{ v.name }}
+ ip address {{ v.gateway }}/{{ v.subnet | ansible.utils.ipaddr('prefix') }}
+exit
+!
+  {% endfor %}
+{% endif %}

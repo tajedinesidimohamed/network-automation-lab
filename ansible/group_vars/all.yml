@@ -1,0 +1,31 @@
+# --- Connexion -------------------------------------------------------------
+# Ansible pilote chaque conteneur via l'API Docker (équivalent de docker exec),
+# pas en SSH. Les conteneurs sont nommés clab-<lab>-<nœud> par containerlab.
+ansible_connection: community.docker.docker
+ansible_host: "clab-{{ lab_name }}-{{ inventory_hostname }}"
+
+lab_name: netlab
+
+# --- Services communs ------------------------------------------------------
+dns_domain: lab.local
+dhcp_server: 10.10.30.10
+
+# --- VLAN de l'entreprise ----------------------------------------------------
+# Source unique : le switch, les sous-interfaces de r-core, le relais et le
+# serveur DHCP sont tous générés à partir de cette liste.
+vlans:
+  - id: 10
+    name: RH
+    subnet: 10.10.10.0/24
+    gateway: 10.10.10.1
+    dhcp_pool: [10.10.10.100, 10.10.10.199]
+  - id: 20
+    name: DEV
+    subnet: 10.10.20.0/24
+    gateway: 10.10.20.1
+    dhcp_pool: [10.10.20.100, 10.10.20.199]
+  - id: 30
+    name: SERVEURS
+    subnet: 10.10.30.0/24
+    gateway: 10.10.30.1
+    # pas de pool : les serveurs sont en adressage statique

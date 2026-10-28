@@ -1,0 +1,95 @@
+# Topologie du lab — réseau d'entreprise simulé
+#
+#            [isp]        AS 65002
+#              | eth1
+#              | eth1
+#           [r-edge]      AS 65001
+#              | eth2
+#              | eth1
+#           [r-core]      router-on-a-stick (eth2.10 / eth2.20 / eth2.30)
+#              | eth2  (trunk 802.1Q)
+#              | eth1
+#             [sw]        bridge Linux vlan_filtering
+#        eth2 / eth3 \ eth4
+#   [pc-rh] [pc-dev] [srv-infra]
+#   VLAN 10  VLAN 20  VLAN 30
+#
+# Ce fichier ne décrit QUE le câblage. Toute la configuration (IP, VLAN,
+# OSPF, BGP, DHCP, DNS) est générée et appliquée par Ansible (ansible/).
+# Le plan d'adressage est documenté dans docs/PLAN-ADRESSAGE.md.
+
+name: netlab
+
+
+mgmt:
+  network: lab-mgmt
+  bridge: br-lab-mgmt
+  ipv4-subnet: 10.99.0.0/24
+
+topology:
+  kinds:
+    linux:
+      image: netlab/alpine-net:3.20.3-r2
+
+  nodes:
+    # --- Routeurs FRRouting -------------------------------------------------
+    isp:
+      kind: linux
+      image: netlab/frr:9.1.0-r1
+      mgmt-ipv4: 10.99.0.11
+    r-edge:
+      kind: linux
+      image: netlab/frr:9.1.0-r1
+      mgmt-ipv4: 10.99.0.12
+    r-core:
+      kind: linux
+      image: netlab/frr:9.1.0-r1
+      mgmt-ipv4: 10.99.0.13
+
+    # --- Switch (bridge Linux) ---------------------------------------------
+    sw:
+      kind: linux
+      mgmt-ipv4: 10.99.0.20
+
+    # --- Hôtes --------------------------------------------------------------
+    pc-rh:
+      kind: linux
+      mgmt-ipv4: 10.99.0.31
+    pc-dev:
+      kind: linux
+      mgmt-ipv4: 10.99.0.32
+    srv-infra:
+      kind: linux
+      mgmt-ipv4: 10.99.0.40
+
+  links:
+    # eBGP : ISP <-> R-EDGE (203.0.113.0/30)
+    - endpoints: ["isp:eth1", "r-edge:eth1"]
+    # OSPF area 0 : R-EDGE <-> R-CORE (10.0.0.0/30)
+    - endpoints: ["r-edge:eth2", "r-core:eth1"]
+    # Trunk 802.1Q : R-CORE <-> SW (VLAN 10, 20, 30)
+    - endpoints: ["r-core:eth2", "sw:eth1"]
+
+    # Ports d'accès. Les MAC des hôtes sont fixées pour que dnsmasq
+    # puisse leur attribuer une IP réservée (et donc un nom DNS stable).
+    - type: veth
+      endpoints:
+        - node: sw
+          interface: eth2
+        - node: pc-rh
+          interface: eth1
+          mac: 02:00:00:00:10:10
+    - type: veth
+      endpoints:
+        - node: sw
+          interface: eth3
+        - node: pc-dev
+          interface: eth1
+          mac: 02:00:00:00:20:20
+    - type: veth
+      endpoints:
+        - node: sw
+          interface: eth4
+        - node: srv-infra
+          interface: eth1
+          mac: 02:00:00:00:30:10

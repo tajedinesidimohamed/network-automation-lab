@@ -1,0 +1,28 @@
+# Inventaire du lab : un hôte Ansible = un nœud containerlab.
+# Un même nœud peut appartenir à plusieurs groupes (ex. r-core est un
+# routeur ET le relais DHCP).
+all:
+  children:
+    routers:
+      hosts:
+        isp:
+        r-edge:
+        r-core:
+    switches:
+      hosts:
+        sw:
+    servers:
+      hosts:
+        srv-infra:
+    clients:
+      hosts:
+        pc-rh:
+        pc-dev:
+
+    # Rôles de service DHCP
+    dhcp_servers:
+      hosts:
+        srv-infra:
+    dhcp_relays:
+      hosts:
+        r-core:

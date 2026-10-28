@@ -1,0 +1,8 @@
+{% include '_head.sh.j2' %}
+
+# Adressage statique du serveur
+ip link set {{ interface }} up
+ip -4 addr show dev {{ interface }} | grep -qw "{{ address }}" \
+  || ip addr add {{ address }} dev {{ interface }}
+ip route replace default via {{ gateway }} dev {{ interface }}
+{% include '_foot.sh.j2' %}

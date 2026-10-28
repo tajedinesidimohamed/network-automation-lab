@@ -1,0 +1,21 @@
+bridge_name: br0
+
+# mode trunk  : trames étiquetées 802.1Q pour les VLAN listés
+# mode access : trames non étiquetées, affectées au VLAN indiqué (PVID)
+switch_ports:
+  - name: eth1
+    description: Trunk vers r-core
+    mode: trunk
+    vlans: "{{ vlans | map(attribute='id') | list }}"
+  - name: eth2
+    description: pc-rh
+    mode: access
+    vlan: 10
+  - name: eth3
+    description: pc-dev
+    mode: access
+    vlan: 20
+  - name: eth4
+    description: srv-infra
+    mode: access
+    vlan: 30

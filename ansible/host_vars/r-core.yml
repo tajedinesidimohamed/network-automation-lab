@@ -1,0 +1,20 @@
+router_id: 10.255.0.1
+
+interfaces:
+  - name: lo
+    addresses: [10.255.0.1/32]
+  - name: eth1
+    description: Transit OSPF vers r-edge
+    addresses: [10.0.0.1/30]
+  - name: eth2
+    description: Trunk 802.1Q vers sw
+
+# Router-on-a-stick : une sous-interface eth2.<vlan> par VLAN, qui porte la
+# passerelle de ce VLAN. Générée à partir de la liste `vlans` (group_vars/all).
+trunk:
+  parent: eth2
+  vlans: "{{ vlans }}"
+
+# Relais DHCP : les VLAN qui ont un pool sont relayés vers ce serveur.
+dhcp_relay:
+  server: "{{ dhcp_server }}"

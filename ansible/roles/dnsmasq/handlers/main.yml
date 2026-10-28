@@ -1,0 +1,5 @@
+- name: Redémarrer dnsmasq
+  ansible.builtin.shell: |
+    pkill -x dnsmasq || true
+    for _ in 1 2 3 4 5; do pgrep -x dnsmasq >/dev/null || break; sleep 1; done
+    dnsmasq --conf-file=/etc/dnsmasq.conf

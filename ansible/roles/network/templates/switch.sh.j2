@@ -1,0 +1,22 @@
+{% include '_head.sh.j2' %}
+
+# Bridge avec filtrage VLAN. vlan_default_pvid 0 : un port ajouté n'appartient
+# à aucun VLAN par défaut, seuls les VLAN déclarés ci-dessous passent.
+ip link show {{ bridge_name }} >/dev/null 2>&1 \
+  || ip link add {{ bridge_name }} type bridge vlan_filtering 1 vlan_default_pvid 0
+ip link set {{ bridge_name }} up
+
+{% for port in switch_ports %}
+# {{ port.name }} : {{ port.description }} ({{ port.mode }})
+ip link set {{ port.name }} master {{ bridge_name }}
+ip link set {{ port.name }} up
+{% if port.mode == 'trunk' %}
+{% for vid in port.vlans %}
+bridge vlan add dev {{ port.name }} vid {{ vid }}
+{% endfor %}
+{% else %}
+bridge vlan add dev {{ port.name }} vid {{ port.vlan }} pvid untagged
+{% endif %}
+
+{% endfor %}
+{% include '_foot.sh.j2' %}

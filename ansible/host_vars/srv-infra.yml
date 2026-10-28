@@ -1,0 +1,4 @@
+interface: eth1
+address: "{{ dhcp_server }}/24"
+gateway: 10.10.30.1
+dns_name: srv

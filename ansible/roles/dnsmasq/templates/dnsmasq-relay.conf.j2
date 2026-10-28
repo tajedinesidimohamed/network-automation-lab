@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# dnsmasq sur {{ inventory_hostname }} en mode RELAIS DHCP uniquement.
+# Il capte les DISCOVER/REQUEST diffusés (broadcast) dans chaque VLAN et les
+# retransmet en unicast au serveur {{ dhcp_relay.server }}, en plaçant dans le
+# champ giaddr l'adresse de la passerelle du VLAN : le serveur sait ainsi
+# dans quelle plage choisir l'adresse.
+
+# Pas de DNS sur le routeur
+port=0
+pid-file=/run/dnsmasq.pid
+log-facility=/var/log/dnsmasq.log
+log-dhcp
+
+{% for v in trunk.vlans if v.dhcp_pool is defined %}
+# VLAN {{ v.id }} - {{ v.name }}
+interface={{ trunk.parent }}.{{ v.id }}
+dhcp-relay={{ v.gateway }},{{ dhcp_relay.server }}
+{% endfor %}

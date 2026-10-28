@@ -1,0 +1,39 @@
+# {{ ansible_managed }}
+# dnsmasq sur {{ inventory_hostname }} : serveur DHCP de tous les VLAN + DNS interne.
+
+# --- Général ---------------------------------------------------------------
+interface={{ interface }}
+bind-interfaces
+pid-file=/run/dnsmasq.pid
+log-facility=/var/log/dnsmasq.log
+log-dhcp
+
+# --- DNS -------------------------------------------------------------------
+domain={{ dns_domain }}
+# Zone servie localement, jamais transmise à un serveur amont
+local=/{{ dns_domain }}/
+# Pas de serveur DNS amont dans le lab
+no-resolv
+no-hosts
+host-record={{ dns_name }}.{{ dns_domain }},{{ dhcp_server }}
+{% for host in groups['clients'] %}
+host-record={{ hostvars[host].dns_name }}.{{ dns_domain }},{{ hostvars[host].reserved_ip }}
+{% endfor %}
+
+# --- DHCP ------------------------------------------------------------------
+dhcp-authoritative
+dhcp-option=option:dns-server,{{ dhcp_server }}
+dhcp-option=option:domain-name,{{ dns_domain }}
+
+# Une plage par VLAN. Les requêtes arrivent relayées par r-core : dnsmasq choisit
+# la plage dont le sous-réseau contient l'adresse giaddr (passerelle du VLAN).
+{% for v in vlans if v.dhcp_pool is defined %}
+# VLAN {{ v.id }} - {{ v.name }}
+dhcp-range=set:vlan{{ v.id }},{{ v.dhcp_pool[0] }},{{ v.dhcp_pool[1] }},{{ v.subnet | ansible.utils.ipaddr('netmask') }},12h
+dhcp-option=tag:vlan{{ v.id }},option:router,{{ v.gateway }}
+{% endfor %}
+
+# Réservations (MAC -> IP fixe hors pool)
+{% for host in groups['clients'] %}
+dhcp-host={{ hostvars[host].mac }},{{ hostvars[host].reserved_ip }},{{ hostvars[host].dns_name }}
+{% endfor %}

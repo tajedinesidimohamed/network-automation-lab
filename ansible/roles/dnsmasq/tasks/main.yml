@@ -1,0 +1,21 @@
+# dnsmasq joue deux rôles selon dnsmasq_mode :
+#   server : DHCP + DNS sur srv-infra
+#   relay  : relais DHCP sur r-core
+- name: Générer la configuration dnsmasq ({{ dnsmasq_mode }})
+  ansible.builtin.template:
+    src: "dnsmasq-{{ dnsmasq_mode }}.conf.j2"
+    dest: /etc/dnsmasq.conf
+    mode: "0644"
+    validate: dnsmasq --test --conf-file=%s
+  notify: Redémarrer dnsmasq
+
+# Pas d'init dans les conteneurs : on vérifie nous-mêmes que le démon tourne.
+- name: Vérifier que dnsmasq tourne
+  ansible.builtin.command: pgrep -x dnsmasq
+  register: dnsmasq_pid
+  changed_when: false
+  failed_when: false
+
+- name: Démarrer dnsmasq
+  ansible.builtin.command: dnsmasq --conf-file=/etc/dnsmasq.conf
+  when: dnsmasq_pid.rc != 0

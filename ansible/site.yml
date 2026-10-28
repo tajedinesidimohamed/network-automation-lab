@@ -1,0 +1,27 @@
+# Playbook principal : amène tout le lab dans l'état décrit par les variables.
+# Idempotent : un second passage ne doit rien changer (changed=0).
+
+- name: Réseau de base (interfaces, sous-interfaces 802.1Q, bridge VLAN)
+  hosts: routers:switches:servers
+  gather_facts: false
+  roles:
+    - network
+
+- name: Configuration FRRouting (adresses, routage)
+  hosts: routers
+  gather_facts: false
+  roles:
+    - frr
+
+- name: Services DHCP / DNS (serveur sur srv-infra, relais sur r-core)
+  hosts: dhcp_servers:dhcp_relays
+  gather_facts: false
+  roles:
+    - dnsmasq
+
+# En dernier : les PC demandent leur adresse une fois serveur et relais prêts.
+- name: Postes clients (DHCP)
+  hosts: clients
+  gather_facts: false
+  roles:
+    - network

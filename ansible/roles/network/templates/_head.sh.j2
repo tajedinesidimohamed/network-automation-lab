@@ -1,0 +1,17 @@
+#!/bin/sh
+# {{ ansible_managed }} — profil {{ network_profile }}
+# Script idempotent : amène {{ inventory_hostname }} dans l'état décrit par les
+# variables Ansible. Affiche CHANGED si l'état réseau a été modifié.
+set -eu
+
+state() {
+  ip -br link; ip -br addr; ip route
+  bridge link show 2>/dev/null; bridge vlan show 2>/dev/null
+  return 0
+}
+BEFORE=$(state)
+
+# Containerlab installe une route par défaut via le réseau de management (eth0).
+# On la retire : le trafic du lab doit passer uniquement par les liens simulés.
+# Ansible passe par docker exec et n'en dépend pas.
+ip route del default dev eth0 2>/dev/null || true

@@ -1,0 +1,7 @@
+interface: eth1
+vlan: 10
+# Doit correspondre à la MAC fixée dans topology.clab.yml
+mac: "02:00:00:00:10:10"
+# Réservation DHCP (hors pool) → adresse et nom DNS stables
+reserved_ip: 10.10.10.10
+dns_name: rh

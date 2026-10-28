@@ -1,0 +1,24 @@
+# Chaque profil (router, switch, server, client) a son script réseau, généré
+# depuis un template. Le script est idempotent et affiche CHANGED uniquement
+# s'il a modifié l'état réseau du nœud : Ansible s'en sert pour changed_when.
+
+- name: Créer le répertoire des scripts du lab
+  ansible.builtin.file:
+    path: /etc/netlab
+    state: directory
+    mode: "0755"
+
+- name: Installer les hooks udhcpc (DNS reçu par DHCP)
+  ansible.builtin.include_tasks: dhcp_client.yml
+  when: network_profile == 'client'
+
+- name: Générer le script réseau ({{ network_profile }})
+  ansible.builtin.template:
+    src: "{{ network_profile }}.sh.j2"
+    dest: /etc/netlab/network.sh
+    mode: "0755"
+
+- name: Appliquer la configuration réseau
+  ansible.builtin.command: /etc/netlab/network.sh
+  register: network_result
+  changed_when: "'CHANGED' in network_result.stdout"

@@ -1,0 +1,10 @@
+- name: Générer frr.conf
+  ansible.builtin.template:
+    src: frr.conf.j2
+    dest: /etc/frr/frr.conf
+    owner: frr
+    group: frr
+    mode: "0640"
+    # Vérifie la syntaxe avec vtysh avant d'écraser la config
+    validate: /usr/bin/vtysh --dryrun --inputfile %s
+  notify: Recharger FRR

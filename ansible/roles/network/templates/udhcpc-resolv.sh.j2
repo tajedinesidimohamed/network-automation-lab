@@ -1,0 +1,8 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Appelé par udhcpc après l'obtention / le renouvellement du bail.
+# $domain et $dns sont fournis par udhcpc (options DHCP 15 et 6).
+{
+  [ -n "$domain" ] && echo "search $domain"
+  for ns in $dns; do echo "nameserver $ns"; done
+} > /etc/resolv.conf

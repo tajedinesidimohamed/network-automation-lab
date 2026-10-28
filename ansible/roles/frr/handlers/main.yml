@@ -1,0 +1,4 @@
+# frr-reload.py compare frr.conf à la config active et n'applique que les
+# différences, sans redémarrer les démons (pas de coupure des sessions).
+- name: Recharger FRR
+  ansible.builtin.command: /usr/lib/frr/frr-reload.py --reload /etc/frr/frr.conf

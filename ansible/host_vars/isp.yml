@@ -1,0 +1,11 @@
+router_id: 10.255.0.3
+
+interfaces:
+  - name: lo
+    addresses:
+      - 10.255.0.3/32
+      # Adresse dans le préfixe « Internet » fictif, pour tester de bout en bout
+      - 8.8.8.8/32
+  - name: eth1
+    description: Lien eBGP vers r-edge (client AS 65001)
+    addresses: [203.0.113.1/30]

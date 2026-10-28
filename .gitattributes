@@ -1,0 +1,5 @@
+# Le lab tourne sous Linux (WSL2) : on force les fins de ligne LF,
+# sinon les scripts bash et les configs extraits sous Windows cassent.
+* text=auto eol=lf
+*.pcap binary
+*.png binary

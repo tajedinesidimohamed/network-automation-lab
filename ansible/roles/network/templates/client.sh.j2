@@ -1,0 +1,11 @@
+{% include '_head.sh.j2' %}
+
+# Adressage dynamique : udhcpc obtient le bail (DORA), puis reste en
+# arrière-plan pour le renouveler. On ne le relance que s'il ne tourne pas.
+ip link set {{ interface }} up
+if ! pgrep -x udhcpc >/dev/null; then
+  ip -4 addr flush dev {{ interface }}
+  # -n : échoue si aucun bail n'est obtenu (le playbook s'arrête alors en erreur)
+  udhcpc -i {{ interface }} -n -t 5 -T 2 -x hostname:{{ inventory_hostname }} >/dev/null 2>&1
+fi
+{% include '_foot.sh.j2' %}

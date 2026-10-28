@@ -1,0 +1,18 @@
+# Containerlab (répertoire de travail généré au déploiement)
+clab-*/
+.topology.clab.yml.bak
+
+# Python / Ansible
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.retry
+ansible/collections/
+
+# Éditeurs / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,29 @@
+# Docker monte /etc/resolv.conf dans le conteneur : le script udhcpc d'Alpine
+# le remplace avec `mv`, ce qui échoue sur un point de montage. On désactive
+# donc sa gestion du DNS et un hook réécrit le fichier sur place.
+
+- name: Désactiver la gestion de resolv.conf par le script udhcpc
+  ansible.builtin.copy:
+    dest: /etc/udhcpc/udhcpc.conf
+    content: |
+      # Géré par Ansible
+      RESOLV_CONF="no"
+    mode: "0644"
+
+- name: Créer les répertoires de hooks udhcpc
+  ansible.builtin.file:
+    path: "/etc/udhcpc/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - post-bound
+    - post-renew
+
+- name: Installer le hook qui écrit le DNS reçu par DHCP
+  ansible.builtin.template:
+    src: udhcpc-resolv.sh.j2
+    dest: "/etc/udhcpc/{{ item }}/resolv"
+    mode: "0755"
+  loop:
+    - post-bound
+    - post-renew

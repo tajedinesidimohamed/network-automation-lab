@@ -1,0 +1,18 @@
+{% include '_head.sh.j2' %}
+
+sysctl -qw net.ipv4.ip_forward=1
+
+{% for itf in interfaces if itf.name != 'lo' %}
+ip link set {{ itf.name }} up
+{% endfor %}
+{% if trunk is defined %}
+
+# Router-on-a-stick : sous-interfaces 802.1Q sur {{ trunk.parent }}.
+# Les adresses IP sont portées par FRR (frr.conf), pas par ce script.
+{% for v in trunk.vlans %}
+ip link show {{ trunk.parent }}.{{ v.id }} >/dev/null 2>&1 \
+  || ip link add link {{ trunk.parent }} name {{ trunk.parent }}.{{ v.id }} type vlan id {{ v.id }}
+ip link set {{ trunk.parent }}.{{ v.id }} up
+{% endfor %}
+{% endif %}
+{% include '_foot.sh.j2' %}
